@@ -1,12 +1,12 @@
 <div align="center">
 
-# 안녕하세요, 홍길동입니다 👋
+# 안녕하세요, 이강현입니다 👋
 
-**수학과 공학 사이에 다리를 놓고 싶은 학생**
-수학 전공 · 첨단방위산업 융합전공 @ 전북대학교
+**수학과 공학 사이에 다리를 놓고 싶은**
+Depatartment of mathematics · convergence major in Advanced Defense Technology and Industry
 
-[![Email](https://img.shields.io/badge/Email-your.email@example.com-blue?style=flat-square&logo=gmail&logoColor=white)](mailto:your.email@example.com)
-![Profile Views](https://komarev.com/ghpvc/?username=YOUR_GITHUB_ID&style=flat-square&color=blue)
+[![Email](https://img.shields.io/badge/Email-imkanghyun1@naver.com-blue?style=flat-square&logo=naver&logoColor=white)](mailto:imkanghyun1@naver.com)
+![Profile Views](https://komarev.com/ghpvc/?LEEKang-Hyun_GITHUB_ID&style=flat-square&color=blue)
 
 </div>
 
@@ -49,17 +49,13 @@
 ![Linux Mint](https://img.shields.io/badge/Linux_Mint-87CF3E?style=flat-square&logo=linuxmint&logoColor=white)
 ![Markdown](https://img.shields.io/badge/Markdown-000000?style=flat-square&logo=markdown&logoColor=white)
 
-## ⚽ Outside the Lab
-
-전북대학교 **Field 축구부**를 운영하고 있습니다.
-팀 디자인에는 '원(圓)'을 모티브로, 하나로 이어지는 팀워크를 담으려 했습니다.
 
 ## 📂 Repositories
 
 | 레포지토리 | 설명 |
 |:--|:--|
 | `notes` | 수학·공학·보안 공부 노트 (주제별 폴더 정리) |
-| `numerical-heat-transfer` | 열전달 문제 수치해석 실습 코드 |
+| `numerical-heat-transfer` | 열전달 문제 수치해석 실습  |
 | `cve-analysis` | 취약점 분석 기록 및 발표 자료 |
 
 <sub>※ 레포지토리는 순차적으로 공개 예정입니다.</sub>
