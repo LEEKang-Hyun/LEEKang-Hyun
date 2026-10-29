@@ -1,7 +1,7 @@
 <div align="center">
 
 
-# Hi, I'm KnagHyun Lee 
+# Hi, I'm KangHyun Lee 
 
 **Building bridges between mathematics and engineering**
 Mathematics · Advanced Defense Industry Convergence @ Jeonbuk National University
