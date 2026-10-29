@@ -50,7 +50,7 @@ Recently, I've expanded my interests into the defense industry and security. I'm
 ![Linux Mint](https://img.shields.io/badge/Linux_Mint-87CF3E?style=flat-square&logo=linuxmint&logoColor=white)
 ![Markdown](https://img.shields.io/badge/Markdown-000000?style=flat-square&logo=markdown&logoColor=white)
 
-## ⚽ Outside the Lab
+## 💵 Outside the Lab
 
 I run **UNION**, Student Council General Affairs Director at Jeonbuk National University.
 I am in charge of the student council's budget execution
