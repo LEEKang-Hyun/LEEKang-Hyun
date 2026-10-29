@@ -1,14 +1,13 @@
 <div align="center">
 
-[🇰🇷 한국어](./README.md) | **🇺🇸 English**
 
-# Hi, I'm Gildong Hong 👋
+# Hi, I'm KnagHyun Lee 👋
 
 **Building bridges between mathematics and engineering**
 Mathematics · Advanced Defense Industry Convergence @ Jeonbuk National University
 
-[![Email](https://img.shields.io/badge/Email-your.email@example.com-blue?style=flat-square&logo=gmail&logoColor=white)](mailto:your.email@example.com)
-![Profile Views](https://komarev.com/ghpvc/?username=YOUR_GITHUB_ID&style=flat-square&color=blue)
+[![Email](https://img.shields.io/badge/Email-imkanghyun1@naver.com-blue?style=flat-square&logo=naver&logoColor=white)](mailto:imkanghyun1@naver.com)
+![Profile Views](https://komarev.com/ghpvc/?username=LEEKang-Hyun&style=flat-square&color=blue)
 
 </div>
 
@@ -33,7 +32,7 @@ Recently, I've expanded my interests into the defense industry and security. I'm
 ## 🚀 Current Work
 
 - 📝 **Korea's Defense Export Ecosystem vs. U.S. FMS** — drafting a research paper
-- 🔐 **CVE-2026-20841 Analysis** — preparing a beginner-friendly presentation on a vulnerability in Markdown link handling and the `ShellExecuteExW` call path
+- 🔐 **CVE Analysis** — preparing a beginner-friendly presentation on a vulnerability in Markdown link handling and the `ShellExecuteExW` call path
 - 🐧 **Linux Analysis Environment** — setting up and practicing with C/C++ static and dynamic analysis tools on Linux Mint
 - 📡 **Home IoT Firmware Analysis** — studying the firmware structure of commercial IoT devices such as AI speakers and streaming devices
 
@@ -53,8 +52,8 @@ Recently, I've expanded my interests into the defense industry and security. I'm
 
 ## ⚽ Outside the Lab
 
-I run **Field**, a football club at Jeonbuk National University.
-Our team design uses the circle as its central motif, representing a team connected as one.
+I run **UNION**, Student Council General Affairs Director at Jeonbuk National University.
+I am in charge of the student council's budget execution
 
 ## 📂 Repositories
 
