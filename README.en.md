@@ -6,7 +6,7 @@
 **Building bridges between mathematics and engineering**
 Mathematics · Advanced Defense Industry Convergence @ Jeonbuk National University
 
-[![Email](https://img.shields.io/badge/Email-imkanghyun1@naver.com-blue?style=flat-square&logo=naver&logoColor=white)](mailto:imkanghyun1@naver.com)
+[![Email](https://img.shields.io/badge/Email-imkanghyun1@naver.com-green?style=flat-square&logo=naver&logoColor=white)](mailto:imkanghyun1@naver.com)
 ![Profile Views](https://komarev.com/ghpvc/?username=LEEKang-Hyun&style=flat-square&color=blue)
 
 </div>
