@@ -28,7 +28,7 @@
 .tag--active { background: var(--primary); color: var(--primary-contrast); }
 
 .status-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0 12px; }
-.status-line { margin: 0; color: var(--text-muted); font-size: 0.9rem; min-height: 1.4em; }
+.status-line { flex: 1; margin: 0; color: var(--text-muted); font-size: 0.9rem; min-height: 1.4em; }
 
 .news-grid { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); padding-bottom: 48px; }
 
@@ -71,3 +71,5 @@
 .digest__meta { margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); }
 .digest__error { color: #d92d20; }
 .digest__notice { background: var(--tag-bg); color: var(--tag-text); border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; margin-bottom: 12px; }
+.auto-refresh { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+@media (max-width: 520px) { .status-row { flex-wrap: wrap; } }
