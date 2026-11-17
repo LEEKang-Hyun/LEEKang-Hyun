@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>이강현의 뉴스공장</title>
+  <meta name="description" content="관심 키워드별 최신 뉴스를 모아 요약해 주는 앱" />
+  <meta name="theme-color" content="#4f46e5" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="뉴스공장" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="container header-inner">
+      <h1 class="logo">📰 이강현의 뉴스공장</h1>
+      <button id="theme-toggle" class="btn btn--ghost" type="button" aria-label="다크/라이트 테마 전환">🌓</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <form id="search-form" class="search" role="search">
+      <label for="keyword-input" class="visually-hidden">관심 키워드</label>
+      <input id="keyword-input" class="search__input" type="search" maxlength="50"
+             placeholder="관심 키워드를 입력하세요 (예: AI, 보안, 경제)" autocomplete="off" />
+      <button class="btn btn--primary" type="submit">검색</button>
+    </form>
+
+    <nav id="tag-list" class="tags" aria-label="추천 키워드"></nav>
+
+    <div class="status-row">
+      <p id="status-line" class="status-line" aria-live="polite"></p>
+      <label class="auto-refresh" title="5분마다 새 기사를 자동으로 가져옵니다">
+        <input id="auto-refresh" type="checkbox" checked /> 5분마다 자동 갱신
+      </label>
+      <button id="digest-btn" class="btn btn--primary" type="button">✨ 요약하기</button>
+    </div>
+
+    <!-- AI 다이제스트 패널 -->
+    <section id="digest" class="digest" aria-live="polite" hidden>
+      <div class="digest__head">
+        <h2 id="digest-title" class="digest__title">뉴스 브리핑</h2>
+        <button id="digest-close" class="btn btn--ghost" type="button" aria-label="브리핑 닫기">✕</button>
+      </div>
+      <div id="digest-loading" class="state" hidden>
+        <div class="spinner" aria-hidden="true"></div>
+        <p>기사들을 읽고 정리하는 중… (AI 요약은 최대 1분 정도 걸릴 수 있어요)</p>
+      </div>
+      <p id="digest-error" class="digest__error" hidden></p>
+      <div id="digest-body" hidden>
+        <p id="digest-notice" class="digest__notice" hidden></p>
+        <p id="digest-overview" class="digest__overview"></p>
+        <div id="digest-topics" class="digest__topics"></div>
+        <p id="digest-meta" class="digest__meta"></p>
+      </div>
+    </section>
+
+    <!-- 로딩 / 빈 상태 / 오류 상태 / 결과 목록 -->
+    <section id="loading" class="state" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <p>최신 뉴스를 불러오는 중…</p>
+    </section>
+    <section id="empty" class="state" hidden>
+      <p>조건에 맞는 기사가 없습니다. 다른 키워드로 검색해 보세요.</p>
+    </section>
+    <section id="error" class="state state--error" hidden>
+      <p id="error-message"></p>
+      <button id="retry-btn" class="btn btn--primary" type="button">다시 시도</button>
+    </section>
+    <section id="news-list" class="news-grid" aria-label="뉴스 목록"></section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

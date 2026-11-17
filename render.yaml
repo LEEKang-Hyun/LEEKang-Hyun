@@ -1,0 +1,18 @@
+# Render(render.com) 배포 설정 - 저장소를 연결하면 이 파일대로 서비스가 만들어진다.
+services:
+  - type: web
+    name: news-curator
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      # 값은 Render 대시보드에서 직접 입력한다. (저장소에 키를 올리지 않는다)
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NAVER_CLIENT_ID
+        sync: false
+      - key: NAVER_CLIENT_SECRET
+        sync: false
+      - key: AI_DAILY_LIMIT
+        value: "100"
