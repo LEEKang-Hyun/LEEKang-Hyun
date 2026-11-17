@@ -27,7 +27,8 @@
 .tag:hover { border-color: var(--primary); }
 .tag--active { background: var(--primary); color: var(--primary-contrast); }
 
-.status-line { margin: 18px 0 12px; color: var(--text-muted); font-size: 0.9rem; min-height: 1.4em; }
+.status-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0 12px; }
+.status-line { margin: 0; color: var(--text-muted); font-size: 0.9rem; min-height: 1.4em; }
 
 .news-grid { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); padding-bottom: 48px; }
 
@@ -54,3 +55,18 @@
   .search { flex-direction: column; }
   .news-grid { grid-template-columns: 1fr; }
 }
+
+/* AI 다이제스트 패널 */
+.digest { background: var(--surface); border: 1px solid var(--primary); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; }
+.digest__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.digest__title { font-size: 1.1rem; }
+.digest__overview { line-height: 1.75; margin-bottom: 16px; }
+.digest__topics { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.digest-topic { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.digest-topic__title { font-size: 0.98rem; margin-bottom: 6px; }
+.digest-topic__summary { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; }
+.digest-topic__links { margin: 0; padding-left: 18px; font-size: 0.82rem; }
+.digest-topic__links a { color: var(--primary); text-decoration: none; }
+.digest-topic__links a:hover { text-decoration: underline; }
+.digest__meta { margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); }
+.digest__error { color: #d92d20; }

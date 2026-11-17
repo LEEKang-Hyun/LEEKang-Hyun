@@ -25,7 +25,28 @@
 
     <nav id="tag-list" class="tags" aria-label="추천 키워드"></nav>
 
-    <p id="status-line" class="status-line" aria-live="polite"></p>
+    <div class="status-row">
+      <p id="status-line" class="status-line" aria-live="polite"></p>
+      <button id="digest-btn" class="btn btn--primary" type="button">✨ AI 요약</button>
+    </div>
+
+    <!-- AI 다이제스트 패널 -->
+    <section id="digest" class="digest" aria-live="polite" hidden>
+      <div class="digest__head">
+        <h2 class="digest__title">✨ AI 뉴스 브리핑</h2>
+        <button id="digest-close" class="btn btn--ghost" type="button" aria-label="브리핑 닫기">✕</button>
+      </div>
+      <div id="digest-loading" class="state" hidden>
+        <div class="spinner" aria-hidden="true"></div>
+        <p>AI가 기사들을 읽고 정리하는 중… (최대 1분 정도 걸릴 수 있어요)</p>
+      </div>
+      <p id="digest-error" class="digest__error" hidden></p>
+      <div id="digest-body" hidden>
+        <p id="digest-overview" class="digest__overview"></p>
+        <div id="digest-topics" class="digest__topics"></div>
+        <p id="digest-meta" class="digest__meta"></p>
+      </div>
+    </section>
 
     <!-- 로딩 / 빈 상태 / 오류 상태 / 결과 목록 -->
     <section id="loading" class="state" hidden>

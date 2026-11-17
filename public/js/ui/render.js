@@ -82,3 +82,40 @@ export function renderTags(tags, active, onClick) {
   });
   nav.replaceChildren(...buttons);
 }
+
+/* ---------- AI 다이제스트 패널 ---------- */
+
+/** 패널 상태 전환: 'loading' | 'error' | 'done' | 'closed' */
+export function setDigestState(view, message = '') {
+  $('digest').hidden = view === 'closed';
+  $('digest-loading').hidden = view !== 'loading';
+  $('digest-error').hidden = view !== 'error';
+  $('digest-body').hidden = view !== 'done';
+  if (view === 'error') $('digest-error').textContent = message;
+}
+
+/** 다이제스트(전체 개요 + 주제별 정리)를 그린다. */
+export function renderDigest(digest) {
+  $('digest-overview').textContent = digest.overview;
+
+  const topics = digest.topics.map((topic) => {
+    const box = el('div', 'digest-topic');
+    box.append(el('h3', 'digest-topic__title', topic.title), el('p', 'digest-topic__summary', topic.summary));
+
+    const list = el('ul', 'digest-topic__links');
+    for (const a of topic.articles) {
+      const li = document.createElement('li');
+      const link = el('a', '', `${a.title} (${a.source})`);
+      link.href = a.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      li.append(link);
+      list.append(li);
+    }
+    box.append(list);
+    return box;
+  });
+  $('digest-topics').replaceChildren(...topics);
+  $('digest-meta').textContent = `기사 ${digest.articleCount}건 기준 · AI가 만든 요약이라 부정확할 수 있어요. 중요한 내용은 원문을 확인하세요.`;
+  setDigestState('done');
+}
