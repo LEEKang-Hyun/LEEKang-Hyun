@@ -30,7 +30,13 @@ export function createApp() {
   app.use('/api', notFound);
 
   // 프론트엔드 정적 파일
-  app.use(express.static(path.join(__dirname, '..', 'public')));
+  // 서비스 워커·매니페스트는 항상 최신본을 확인하도록 캐시를 막는다. (앱 업데이트가 바로 반영되게)
+  const noCache = new Set(['service-worker.js', 'manifest.webmanifest']);
+  app.use(express.static(path.join(__dirname, '..', 'public'), {
+    setHeaders: (res, filePath) => {
+      if (noCache.has(path.basename(filePath))) res.setHeader('Cache-Control', 'no-cache');
+    },
+  }));
 
   app.use(errorHandler);
   return app;

@@ -135,3 +135,10 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 });
 
 loadNews();
+
+/* 앱으로 설치할 수 있도록 서비스 워커를 등록한다. (HTTPS 또는 localhost에서만 동작) */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => { /* 등록 실패해도 웹으로는 정상 동작 */ });
+  });
+}
