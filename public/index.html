@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>뉴스 큐레이터</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="container header-inner">
+      <h1 class="logo">📰 뉴스 큐레이터</h1>
+      <button id="theme-toggle" class="btn btn--ghost" type="button" aria-label="다크/라이트 테마 전환">🌓</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <form id="search-form" class="search" role="search">
+      <label for="keyword-input" class="visually-hidden">관심 키워드</label>
+      <input id="keyword-input" class="search__input" type="search" maxlength="50"
+             placeholder="관심 키워드를 입력하세요 (예: AI, 보안, 경제)" autocomplete="off" />
+      <button class="btn btn--primary" type="submit">검색</button>
+    </form>
+
+    <nav id="tag-list" class="tags" aria-label="추천 키워드"></nav>
+
+    <p id="status-line" class="status-line" aria-live="polite"></p>
+
+    <!-- 로딩 / 빈 상태 / 오류 상태 / 결과 목록 -->
+    <section id="loading" class="state" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <p>최신 뉴스를 불러오는 중…</p>
+    </section>
+    <section id="empty" class="state" hidden>
+      <p>조건에 맞는 기사가 없습니다. 다른 키워드로 검색해 보세요.</p>
+    </section>
+    <section id="error" class="state state--error" hidden>
+      <p id="error-message"></p>
+      <button id="retry-btn" class="btn btn--primary" type="button">다시 시도</button>
+    </section>
+    <section id="news-list" class="news-grid" aria-label="뉴스 목록"></section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
