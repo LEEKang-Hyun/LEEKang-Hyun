@@ -4,7 +4,7 @@
  * - 정적 파일은 "캐시를 먼저 보여주고 뒤에서 새로 받아 갱신"하는 방식이다.
  * 캐시 구조를 바꿀 때는 CACHE_VERSION을 올려 이전 캐시를 지운다.
  */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `news-factory-${CACHE_VERSION}`;
 const APP_SHELL = [
   '/', '/css/base.css', '/css/components.css',
