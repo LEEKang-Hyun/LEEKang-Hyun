@@ -1,6 +1,6 @@
 /**
- * RSS 피드 수집 서비스.
- * 여러 피드를 병렬로 가져와 내부 공통 포맷(Article)으로 변환하고,
+ * 뉴스 수집 서비스 (네이버 검색 API 또는 RSS).
+ * 여러 소스를 병렬로 가져와 내부 공통 포맷(Article)으로 변환하고,
  * 중복 제거·키워드 필터링·최신순 정렬까지 수행한다.
  * req/res를 알지 못하며 순수하게 데이터만 다룬다.
  */
@@ -9,6 +9,7 @@ import { config } from '../config/index.js';
 import { AppError } from '../utils/AppError.js';
 import { logger } from '../utils/logger.js';
 import { summarize } from './summarizer.service.js';
+import { fetchNaverNews } from './naver.service.js';
 
 /**
  * @typedef {Object} Article
@@ -46,7 +47,7 @@ function splitTitleAndSource(rawTitle = '', fallbackSource = '') {
  * RSS item 하나를 Article로 변환한다.
  * @returns {Article|null} 필수 값(제목/링크)이 없으면 null
  */
-function toArticle(item, feed) {
+function toArticle(item, feed) {  // feed: RSS 소스 설정
   if (!item.title || !item.link) return null;
   const { title, source } = splitTitleAndSource(item.title, feed.name);
   const date = new Date(item.isoDate || item.pubDate || Date.now());
@@ -61,21 +62,31 @@ function toArticle(item, feed) {
   };
 }
 
+/** 소스별 캐시 키 */
+const sourceKey = (src) => `${src.type}:${src.url ?? src.query}`;
+
+/** 소스 종류(rss/naver)에 맞는 방법으로 기사를 가져온다. */
+async function loadSource(src) {
+  if (src.type === 'naver') return fetchNaverNews(src);
+  const parsed = await parser.parseURL(src.url);
+  return parsed.items.map((item) => toArticle(item, src)).filter(Boolean);
+}
+
 /**
- * 피드 하나를 가져온다. 실패해도 다른 피드에 영향이 없도록 오류는 던지지 않고 null을 반환한다.
+ * 소스 하나를 가져온다. 실패해도 다른 소스에 영향이 없도록 오류는 던지지 않고 null을 반환한다.
  * @returns {Promise<Article[]|null>}
  */
-async function fetchFeed(feed) {
-  const hit = cache.get(feed.url);
+async function fetchSource(src) {
+  const key = sourceKey(src);
+  const hit = cache.get(key);
   if (hit && hit.expires > Date.now()) return hit.articles;
 
   try {
-    const parsed = await parser.parseURL(feed.url);
-    const articles = parsed.items.map((item) => toArticle(item, feed)).filter(Boolean);
-    cache.set(feed.url, { expires: Date.now() + config.cacheTtlMs, articles });
+    const articles = await loadSource(src);
+    cache.set(key, { expires: Date.now() + config.cacheTtlMs, articles });
     return articles;
   } catch (err) {
-    logger.warn(`피드 수집 실패 [${feed.name}] ${err.message}`);
+    logger.warn(`수집 실패 [${src.name}] ${err.message}`);
     // 만료됐더라도 이전 캐시가 있으면 그것이라도 보여준다.
     return hit ? hit.articles : null;
   }
@@ -99,25 +110,22 @@ function matchesKeyword(article, keyword) {
  * @throws {AppError} 모든 피드 수집에 실패한 경우(502)
  */
 export async function fetchNews({ keyword = '', limit = config.defaultLimit } = {}) {
-  const feeds = [...config.feeds];
-  if (keyword) {
-    feeds.push({ name: `'${keyword}' 검색`, category: '검색', url: config.searchFeedUrl(keyword) });
-  }
+  const sources = [...config.sources];
+  if (keyword) sources.push(config.searchSource(keyword));
 
-  const results = await Promise.all(feeds.map(fetchFeed));
+  const results = await Promise.all(sources.map(fetchSource));
   if (results.every((r) => r === null)) {
-    throw new AppError(502, 'FEED_UNAVAILABLE', '뉴스 피드를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    throw new AppError(502, 'FEED_UNAVAILABLE', '뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
   }
 
-  const searchFeedUrl = keyword ? config.searchFeedUrl(keyword) : null;
   const seen = new Set();
   const merged = [];
 
-  feeds.forEach((feed, i) => {
+  sources.forEach((src, i) => {
     for (const article of results[i] || []) {
       if (seen.has(article.url)) continue;
-      // 검색 피드 결과는 이미 키워드 기반이므로 필터링하지 않는다.
-      if (keyword && feed.url !== searchFeedUrl && !matchesKeyword(article, keyword)) continue;
+      // 검색 소스 결과는 이미 키워드 기반이므로 필터링하지 않는다.
+      if (keyword && !src.isSearch && !matchesKeyword(article, keyword)) continue;
       seen.add(article.url);
       merged.push(article);
     }

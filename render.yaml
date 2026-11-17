@@ -10,5 +10,9 @@ services:
       # 값은 Render 대시보드에서 직접 입력한다. (저장소에 키를 올리지 않는다)
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: NAVER_CLIENT_ID
+        sync: false
+      - key: NAVER_CLIENT_SECRET
+        sync: false
       - key: AI_DAILY_LIMIT
         value: "100"
