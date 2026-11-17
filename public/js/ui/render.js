@@ -116,6 +116,12 @@ export function renderDigest(digest) {
     return box;
   });
   $('digest-topics').replaceChildren(...topics);
-  $('digest-meta').textContent = `기사 ${digest.articleCount}건 기준 · AI가 만든 요약이라 부정확할 수 있어요. 중요한 내용은 원문을 확인하세요.`;
+  const isAi = digest.mode === 'ai';
+  $('digest-title').textContent = isAi ? '✨ AI 뉴스 브리핑' : '📋 뉴스 브리핑 (기본 요약)';
+  $('digest-notice').textContent = digest.notice;
+  $('digest-notice').hidden = !digest.notice;
+  $('digest-meta').textContent = isAi
+    ? `기사 ${digest.articleCount}건 기준 · AI가 만든 요약이라 부정확할 수 있어요. 중요한 내용은 원문을 확인하세요.`
+    : `기사 ${digest.articleCount}건 기준 · 제목의 자주 나온 단어로 묶은 정리예요. 자세한 내용은 원문을 확인하세요.`;
   setDigestState('done');
 }

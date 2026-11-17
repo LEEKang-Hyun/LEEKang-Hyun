@@ -35,7 +35,7 @@ export async function getNews(req, res) {
 
 /**
  * GET /api/news/digest?keyword=AI
- * 수집된 기사들을 AI로 요약·주제별 정리해 돌려준다.
+ * 수집된 기사들을 요약·주제별로 정리해 돌려준다. (AI 키가 있으면 AI, 없으면 규칙 기반)
  */
 export async function getDigest(req, res) {
   const { keyword } = parseQuery(req);
@@ -53,6 +53,9 @@ export async function getDigest(req, res) {
   }));
   res.json({
     success: true,
-    data: { keyword, overview: digest.overview, topics, articleCount: digest.articleCount, cached: digest.cached },
+    data: {
+      keyword, mode: digest.mode, notice: digest.notice, overview: digest.overview,
+      topics, articleCount: digest.articleCount, cached: digest.cached,
+    },
   });
 }

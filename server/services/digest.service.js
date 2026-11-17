@@ -8,6 +8,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config/index.js';
 import { AppError } from '../utils/AppError.js';
 import { logger } from '../utils/logger.js';
+import { createBasicDigest } from './basicDigest.service.js';
 
 /**
  * @typedef {Object} Digest
@@ -68,23 +69,59 @@ function buildPrompt(articles, keyword) {
   return `${topic}아래 기사 ${articles.length}건을 브리핑해 주세요.\n\n${lines.join('\n')}`;
 }
 
+/** 하루 AI 호출 횟수 제한 (공개 배포 시 API 비용 폭주 방지) */
+const usage = { day: '', count: 0 };
+function takeAiQuota() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (usage.day !== today) Object.assign(usage, { day: today, count: 0 });
+  if (usage.count >= config.aiDailyLimit) return false;
+  usage.count += 1;
+  return true;
+}
+
 /**
- * 기사 목록에서 AI 다이제스트를 만든다.
+ * 기사 목록을 요약·정리한다. (하이브리드)
+ * API 키가 있으면 AI 요약을, 없거나 AI가 실패/한도 초과면 규칙 기반 요약을 사용한다.
  * @param {import('./fetcher.service.js').Article[]} articles - 최신순 기사 목록
  * @param {string} [keyword] - 현재 관심 키워드
- * @returns {Promise<Digest & {articleCount: number, cached: boolean}>}
- * @throws {AppError} 키 미설정(503), 기사 없음(400), 모델 거절/호출 실패(502)
+ * @returns {Promise<Digest & {mode: 'ai'|'basic', notice: string, articleCount: number, cached: boolean}>}
+ * @throws {AppError} 요약할 기사가 없는 경우(400)
  */
 export async function createDigest(articles, keyword = '') {
   const targets = articles.slice(0, config.digestMaxArticles);
   if (targets.length === 0) {
     throw new AppError(400, 'NO_ARTICLES', '요약할 기사가 없습니다. 다른 키워드로 검색해 보세요.');
   }
+
+  let notice = '';
+  if (!config.anthropicApiKey) {
+    notice = 'AI 키가 설정되지 않아 기본 요약(키워드·분류 기반)으로 보여드려요.';
+  } else {
+    try {
+      return { ...(await createAiDigest(targets, keyword)), mode: 'ai', notice: '', articleCount: targets.length };
+    } catch (err) {
+      if (!(err instanceof AppError)) throw err;
+      logger.warn(`AI 요약 대신 기본 요약 사용: ${err.code}`);
+      notice = `${err.message} (대신 기본 요약으로 보여드려요)`;
+    }
+  }
+  return { ...createBasicDigest(targets, keyword), mode: 'basic', notice, articleCount: targets.length, cached: false };
+}
+
+/**
+ * Claude로 AI 다이제스트를 만든다. (결과는 캐시)
+ * @throws {AppError} 한도 초과(429), 키 오류/호출 실패/응답 불량(502)
+ */
+async function createAiDigest(targets, keyword) {
   const anthropic = getClient();
 
   const key = crypto.createHash('sha256').update(keyword + targets.map((a) => a.url).join('|')).digest('hex');
   const hit = cache.get(key);
-  if (hit && hit.expires > Date.now()) return { ...hit.digest, articleCount: targets.length, cached: true };
+  if (hit && hit.expires > Date.now()) return { ...hit.digest, cached: true };
+
+  if (!takeAiQuota()) {
+    throw new AppError(429, 'AI_DAILY_LIMIT', '오늘의 AI 요약 사용 한도에 도달했어요.');
+  }
 
   let response;
   try {
@@ -131,5 +168,5 @@ export async function createDigest(articles, keyword = '') {
   }));
 
   cache.set(key, { expires: Date.now() + config.digestCacheTtlMs, digest });
-  return { ...digest, articleCount: targets.length, cached: false };
+  return { ...digest, cached: false };
 }

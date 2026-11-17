@@ -21,6 +21,7 @@ export const config = {
   digestMaxArticles: 40,          // 요약에 사용할 최대 기사 수 (토큰·비용 제한)
   digestCacheTtlMs: 10 * 60 * 1000, // 같은 기사 묶음은 10분간 재사용
   digestTimeoutMs: 90 * 1000,
+  aiDailyLimit: Number(process.env.AI_DAILY_LIMIT) || 100, // 하루 최대 AI 호출 수
 
   /** 기본 수집 대상 RSS 피드 (구글 뉴스 한국어판) */
   feeds: [

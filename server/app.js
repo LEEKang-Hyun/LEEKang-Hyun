@@ -4,6 +4,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import newsRoutes from './routes/news.routes.js';
 import { notFound } from './middlewares/notFound.js';
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -14,7 +15,15 @@ export function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
+  // Render 등 프록시 뒤에서 배포될 때 실제 사용자 IP로 요청 제한을 걸기 위해 필요하다.
+  app.set('trust proxy', 1);
   app.use(express.json());
+
+  // 공개 배포 대비 요청 제한: 전체 API는 분당 60회, 요약은 분당 8회
+  const limitMessage = { success: false, error: { code: 'RATE_LIMITED', message: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' } };
+  const limiter = (max) => rateLimit({ windowMs: 60 * 1000, limit: max, standardHeaders: true, legacyHeaders: false, message: limitMessage });
+  app.use('/api', limiter(60));
+  app.use('/api/news/digest', limiter(8));
 
   // API 라우트
   app.use('/api', newsRoutes);

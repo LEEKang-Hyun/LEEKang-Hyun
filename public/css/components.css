@@ -70,3 +70,4 @@
 .digest-topic__links a:hover { text-decoration: underline; }
 .digest__meta { margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); }
 .digest__error { color: #d92d20; }
+.digest__notice { background: var(--tag-bg); color: var(--tag-text); border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; margin-bottom: 12px; }
