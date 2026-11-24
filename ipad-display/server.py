@@ -270,21 +270,30 @@ async def index(request):
 
 
 def local_ips():
-    ips = set()
+    """iPad가 접속할 IP 목록. 기본 경로(Wi-Fi) IP와 모바일 핫스팟 IP를 앞에 둠."""
+    primary = None
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("10.255.255.255", 1))
-        ips.add(s.getsockname()[0])
+        primary = s.getsockname()[0]
         s.close()
     except Exception:
         pass
+    ips = set()
     try:
         for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
             ips.add(info[4][0])
     except Exception:
         pass
-    ips.discard("127.0.0.1")
-    return sorted(ips) or ["127.0.0.1"]
+    # 루프백, 자동 사설 IP(169.254), VirtualBox 호스트 전용(192.168.56.x) 제외
+    ips = {ip for ip in ips if not ip.startswith(("127.", "169.254.", "192.168.56."))}
+
+    def rank(ip):
+        if ip == "192.168.137.1":  # Windows 모바일 핫스팟
+            return 0
+        return 1 if ip == primary else 2
+    ordered = sorted(ips | ({primary} if primary else set()), key=lambda ip: (rank(ip), ip))
+    return ordered or ["127.0.0.1"]
 
 
 def print_qr(url):
