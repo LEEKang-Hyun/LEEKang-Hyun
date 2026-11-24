@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iPad Display">
+<title>iPad Display</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden;
+    touch-action: none; -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none; font-family: -apple-system, sans-serif; color: #fff; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+  #status { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px; font-size: 20px; text-align: center; padding: 16px; }
+  #status small { opacity: .6; font-size: 14px; }
+  #menuBtn { position: fixed; right: 12px; bottom: 12px; width: 44px; height: 44px; border-radius: 22px;
+    background: rgba(40,40,40,.55); border: 1px solid rgba(255,255,255,.25); color: #fff; font-size: 20px;
+    opacity: .35; z-index: 10; }
+  #panel { position: fixed; right: 12px; bottom: 66px; width: 280px; background: rgba(28,28,30,.95);
+    border-radius: 14px; padding: 16px; z-index: 11; display: none; font-size: 15px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5); }
+  #panel.open { display: block; }
+  #panel label { display: block; margin: 10px 0 4px; }
+  #panel input[type=range], #panel select { width: 100%; }
+  #panel button { width: 100%; margin-top: 12px; padding: 10px; border-radius: 10px; border: 0;
+    background: #0a84ff; color: #fff; font-size: 15px; }
+  #panel .row { display: flex; justify-content: space-between; opacity: .7; font-size: 13px; margin-top: 10px; }
+  #panel .help { font-size: 12px; opacity: .6; line-height: 1.5; margin-top: 10px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="status">연결 중…<small>PC에서 server.py가 실행 중인지 확인하세요</small></div>
+<button id="menuBtn" aria-label="설정">⚙︎</button>
+<div id="panel">
+  <strong>설정</strong>
+  <label>화질 <span id="qv"></span></label>
+  <input id="q" type="range" min="30" max="95" step="5">
+  <label>프레임 (FPS) <span id="fv"></span></label>
+  <input id="f" type="range" min="10" max="60" step="5">
+  <label>해상도</label>
+  <select id="w">
+    <option value="0">원본</option>
+    <option value="2560">최대 2560px</option>
+    <option value="1920">최대 1920px</option>
+    <option value="1280">최대 1280px (빠름)</option>
+  </select>
+  <button id="fs">전체 화면</button>
+  <div class="row"><span id="fps">0 fps</span><span id="kb">0 KB/s</span></div>
+  <div class="help">탭 = 클릭 · 길게 누르기 = 우클릭<br>드래그 = 끌기 · 두 손가락 = 스크롤</div>
+</div>
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const statusEl = document.getElementById('status');
+  const key = new URLSearchParams(location.search).get('key') || '';
+
+  // ---- 설정 (iPad에 저장) ----
+  const load = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
+  const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+  const cfg = { q: +load('q', 70), fps: +load('fps', 30), w: +load('w', 0) };
+  const qEl = document.getElementById('q'), fEl = document.getElementById('f'), wEl = document.getElementById('w');
+  qEl.value = cfg.q; fEl.value = cfg.fps; wEl.value = cfg.w;
+  const showVals = () => { qv.textContent = qEl.value; fv.textContent = fEl.value; };
+  showVals();
+  const pushCfg = () => send({ t: 'cfg', q: cfg.q, fps: cfg.fps, w: cfg.w });
+  qEl.oninput = fEl.oninput = showVals;
+  qEl.onchange = () => { cfg.q = +qEl.value; save('q', cfg.q); pushCfg(); };
+  fEl.onchange = () => { cfg.fps = +fEl.value; save('fps', cfg.fps); pushCfg(); };
+  wEl.onchange = () => { cfg.w = +wEl.value; save('w', cfg.w); pushCfg(); };
+
+  const panel = document.getElementById('panel');
+  document.getElementById('menuBtn').addEventListener('click', e => { e.stopPropagation(); panel.classList.toggle('open'); });
+  for (const el of [panel, document.getElementById('menuBtn')])
+    for (const ev of ['touchstart', 'touchmove', 'touchend']) el.addEventListener(ev, e => e.stopPropagation());
+  document.getElementById('fs').onclick = () => {
+    const el = document.documentElement;
+    (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+    panel.classList.remove('open');
+  };
+
+  // ---- 화면 깨어있기 ----
+  let wakeLock = null;
+  const keepAwake = async () => { try { wakeLock = await navigator.wakeLock?.request('screen'); } catch {} };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) keepAwake(); });
+  keepAwake();
+
+  // ---- 캔버스 & 그리기 ----
+  let dpr = 1, rect = { x: 0, y: 0, w: 1, h: 1 }, lastBitmap = null;
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(innerWidth * dpr);
+    canvas.height = Math.round(innerHeight * dpr);
+    if (lastBitmap) draw(lastBitmap);
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  function draw(bmp) {
+    const cw = canvas.width, ch = canvas.height;
+    const s = Math.min(cw / bmp.width, ch / bmp.height);
+    const w = bmp.width * s, h = bmp.height * s, x = (cw - w) / 2, y = (ch - h) / 2;
+    rect = { x: x / dpr, y: y / dpr, w: w / dpr, h: h / dpr };
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cw, ch);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bmp, x, y, w, h);
+  }
+
+  // ---- 연결 ----
+  let ws = null, pending = null, decoding = false, frames = 0, bytes = 0;
+  function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+
+  async function decodeLoop() {
+    if (decoding) return;
+    decoding = true;
+    while (pending) {
+      const buf = pending; pending = null;
+      try {
+        const bmp = await createImageBitmap(new Blob([buf], { type: 'image/jpeg' }));
+        if (lastBitmap && lastBitmap.close) lastBitmap.close();
+        lastBitmap = bmp; draw(bmp); frames++;
+      } catch (e) { console.warn(e); }
+    }
+    decoding = false;
+  }
+
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(`${proto}://${location.host}/ws?key=${encodeURIComponent(key)}`);
+    ws.binaryType = 'arraybuffer';
+    ws.onopen = () => { statusEl.style.display = 'none'; pushCfg(); };
+    ws.onmessage = ev => {
+      if (typeof ev.data === 'string') return;
+      bytes += ev.data.byteLength;
+      pending = ev.data;          // 최신 프레임만 유지 (지연 최소화)
+      decodeLoop();
+    };
+    ws.onclose = () => {
+      statusEl.style.display = 'flex';
+      statusEl.innerHTML = '연결이 끊어졌습니다. 다시 연결 중…<small>PC와 iPad가 같은 Wi-Fi인지 확인하세요</small>';
+      setTimeout(connect, 1500);
+    };
+  }
+  connect();
+
+  setInterval(() => {
+    document.getElementById('fps').textContent = frames + ' fps';
+    document.getElementById('kb').textContent = Math.round(bytes / 1024) + ' KB/s';
+    frames = 0; bytes = 0;
+  }, 1000);
+
+  // ---- 터치 입력 → 마우스 ----
+  const norm = (t) => ({ x: (t.clientX - rect.x) / rect.w, y: (t.clientY - rect.y) / rect.h });
+  const MOVE_TOL = 10, LONG_MS = 550;
+  let st = null; // {x0,y0,start,mode:'pending'|'drag'|'scroll'|'done', timer}
+  let lastMoveSent = 0, scrollY = null, scrollX = null;
+
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    panel.classList.remove('open');
+    if (e.touches.length >= 2) {
+      if (st) { clearTimeout(st.timer); if (st.mode === 'drag') send({ t: 'up', ...st.last }); }
+      st = { mode: 'scroll' };
+      scrollY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      scrollX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      return;
+    }
+    const t = e.touches[0], p = norm(t);
+    st = { x0: t.clientX, y0: t.clientY, p0: p, last: p, start: performance.now(), mode: 'pending' };
+    st.timer = setTimeout(() => {
+      if (st && st.mode === 'pending') { send({ t: 'rclick', ...st.p0 }); st.mode = 'done'; navigator.vibrate?.(20); }
+    }, LONG_MS);
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!st) return;
+    if (st.mode === 'scroll' && e.touches.length >= 2) {
+      const y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const x = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const dy = y - scrollY, dx = x - scrollX;
+      if (Math.abs(dy) >= 2 || Math.abs(dx) >= 2) {
+        send({ t: 'wheel', dy: Math.round(dy * 4), dx: Math.round(-dx * 4) });
+        scrollY = y; scrollX = x;
+      }
+      return;
+    }
+    const t = e.touches[0], p = norm(t);
+    st.last = p;
+    if (st.mode === 'pending' && Math.hypot(t.clientX - st.x0, t.clientY - st.y0) > MOVE_TOL) {
+      clearTimeout(st.timer);
+      st.mode = 'drag';
+      send({ t: 'down', ...st.p0 });
+    }
+    if (st.mode === 'drag') {
+      const now = performance.now();
+      if (now - lastMoveSent > 12) { send({ t: 'move', ...p }); lastMoveSent = now; }
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    if (!st) return;
+    if (st.mode === 'scroll') { if (e.touches.length === 0) st = null; return; }
+    clearTimeout(st.timer);
+    if (st.mode === 'pending') send({ t: 'click', ...st.p0 });
+    else if (st.mode === 'drag') send({ t: 'up', ...st.last });
+    st = null;
+  }, { passive: false });
+
+  canvas.addEventListener('touchcancel', () => {
+    if (st && st.mode === 'drag') send({ t: 'up', ...st.last });
+    if (st) clearTimeout(st.timer);
+    st = null;
+  });
+
+  // 마우스/트랙패드(iPad 매직 키보드) 지원
+  let mouseDown = false;
+  canvas.addEventListener('mousedown', e => { if (e.button === 2) return; mouseDown = true; send({ t: 'down', ...norm(e) }); });
+  canvas.addEventListener('mousemove', e => {
+    const now = performance.now();
+    if (now - lastMoveSent > 12) { send({ t: 'move', ...norm(e) }); lastMoveSent = now; }
+  });
+  addEventListener('mouseup', e => { if (mouseDown) { mouseDown = false; send({ t: 'up', ...norm(e) }); } });
+  canvas.addEventListener('contextmenu', e => { e.preventDefault(); send({ t: 'rclick', ...norm(e) }); });
+  canvas.addEventListener('wheel', e => { e.preventDefault(); send({ t: 'wheel', dy: Math.round(-e.deltaY), dx: Math.round(e.deltaX) }); }, { passive: false });
+})();
+</script>
+</body>
+</html>
